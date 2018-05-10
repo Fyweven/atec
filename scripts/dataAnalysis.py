@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import pickle
 from utils.config import opt
 from tqdm import tqdm

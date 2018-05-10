@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
-from io import open
 from utils.config import opt
 import torch
 from torch.utils import data
 from torch.utils.data import DataLoader
-import pickle
 import utils.charFeature as charFeat
 
 def getTrainData():

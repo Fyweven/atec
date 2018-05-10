@@ -4,7 +4,6 @@ from config import opt
 from tqdm import tqdm
 import os
 from io import open
-import csv
 path=os.path.abspath('..')
 
 with open(path+opt.char_idx_path, 'rb') as f:

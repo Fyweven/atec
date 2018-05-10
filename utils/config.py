@@ -3,6 +3,7 @@
 class Config(object):
     coding = 'UTF-8-SIG'
 
+    lr = 1e-3
     max_len = 32
     batch_size = 64
     char_size = 1718
