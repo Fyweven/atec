@@ -15,7 +15,7 @@ class DSSM(nn.Module):
         )
 
         self.l2 = nn.Sequential(
-            nn.Linear(opt.L1_N, opt.L2_N_N),
+            nn.Linear(opt.L1_N, opt.L2_N),
             nn.BatchNorm1d(opt.L2_N),
             nn.ReLU(inplace=True)
         )
@@ -30,5 +30,5 @@ class DSSM(nn.Module):
         ques2_l2 = self.l2(ques2_l1)
 
         sim = self.cos(ques1_l2, ques2_l2)
-        out = F.relu(sim)
+        out = F.sigmoid(sim)
         return out

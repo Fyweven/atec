@@ -46,6 +46,7 @@ if __name__ == '__main__':
     train_loader = DataLoader(dataset, batch_size=opt.batch_size, shuffle=True, drop_last=False)
     print (len(train_loader))
     for tt in train_loader:
-        # txt1, txt2, l = tt
-        print tt
+        txt1, txt2, l = tt
+        print txt1
+        print l
         break

@@ -8,14 +8,16 @@ from utils.config import opt
 import time
 from tqdm import tqdm
 from torch.autograd import Variable
-from models import dssm
+from models.CNNText import CNNText
+import os
+path=os.path.abspath('..')
 
 def train(model):
     print('加载数据。。。')
     dataset = dataLoad.MyDataset(train=True)
     print ('数据加载完成！')
 
-    criterion = nn.BCELoss()
+    criterion = nn.CrossEntropyLoss()
 
     optimizer = optim.Adam(model.parameters(), lr=opt.lr)
 
@@ -30,14 +32,14 @@ def train(model):
         step = 0
         time.sleep(0.1)
         for data in tqdm(train_loader):
-            txt, label = data
-            txt = Variable(txt)
-            label = Variable(label)
+            txt1, txt2, label = data
+            txt1, txt2, label = Variable(txt1), Variable(txt2), Variable(label)
             if opt.use_gpu:
-                txt, label = txt.cuda(), label.cuda()
+                txt1, txt2, label = txt1.cuda(), txt2.cuda(), label.cuda()
             optimizer.zero_grad()
-            out = model(txt)
+            out = model(txt1, txt2)
             loss = criterion(out,label)
+
             running_loss += loss.data.mean() * label.size(0)
             running_acc += get_acc(out,label)
 
@@ -48,9 +50,9 @@ def train(model):
             if step % 100 == 0:
                 print('Loss: {:.6f}, Acc: {:.6f}'.format(running_loss / (opt.batch_size * step), running_acc / (opt.batch_size * step)))
         print ('')
-        # base = 'word' if opt.baseWord else 'char'
-        base = 'oneHot'
-        torch.save(model.state_dict(), opt.model_root_path + '%s_%s_%s.pkl' % (model.model_name,base,str(epoch)))
+        base = 'word' if opt.baseWord else 'char'
+        torch.save(model.state_dict(), path + opt.model_root_path + '%s_%s_%s.pkl' % (model.model_name,base,str(epoch)))
+        eval(model, dataset)
 
 def eval(model, dataset):
     model.eval()
@@ -58,21 +60,17 @@ def eval(model, dataset):
     test_loader = DataLoader(dataset, batch_size=opt.batch_size, shuffle=False, drop_last=False)
     eval_acc = 0.0
     test_num = 0
-    res = []
     print('*' * 3 + 'eval' + '*' * 3)
     time.sleep(0.1)
     for data in tqdm(test_loader):
-        txt, label = data
-        txt = Variable(txt)
-        label = Variable(label)
+        txt1, txt2, label = data
+        txt1, txt2, label = Variable(txt1), Variable(txt2), Variable(label)
         if opt.use_gpu:
-            txt = txt.cuda()
-            label = label.cuda()
-        out = model(txt)
-        _, pred = torch.max(out, 1)
-        res += pred.data.tolist()
+            txt1, txt2, label = txt1.cuda(), txt2.cuda(), label.cuda()
+        out = model(txt1, txt2)
         eval_acc += get_acc(out, label)
         test_num += label.size(0)
+    print eval_acc/test_num
 
 
 def get_acc(out, label):
@@ -96,9 +94,8 @@ def initNetParams(net):
 if __name__ == '__main__':
     if opt.use_gpu:
         torch.cuda.set_device(3)
-    model = dssm.DSSM()
+    model = CNNText()
     print(model.model_name)
-    print('word' if opt.baseWord else 'char')
     if opt.use_gpu:
         model.cuda()
     # initNetParams(model)
