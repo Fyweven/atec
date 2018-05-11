@@ -76,7 +76,7 @@ def eval(model, dataset):
 def get_acc(out, label):
     _, pred = torch.max(out, 1)
     num_correct = (pred == label).sum()
-    return num_correct.data[0]
+    return num_correct.item()
 
 def initNetParams(net):
     '''''Init net parameters.'''

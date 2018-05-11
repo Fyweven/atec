@@ -1,4 +1,4 @@
-"""
+
         run_loss = 0.0
         total_count = 0.0
         right_count = [0.0, 0.0]
@@ -49,4 +49,3 @@
         print('target: ' + str(target_count))
         print('predict: ' + str(predict_count))
         print('accuracy: %.4f, F1 score: %.4f' % (a, f1))
-"""

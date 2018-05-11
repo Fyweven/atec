@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import torch
+
 
 class Config(object):
     coding = 'UTF-8-SIG'
@@ -19,7 +21,7 @@ class Config(object):
 
 
     max_epoch = 1
-    use_gpu = False
+    use_gpu = torch.cuda.is_available()
 
     baseWord = False
 
