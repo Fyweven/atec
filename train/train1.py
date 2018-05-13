@@ -54,12 +54,16 @@ def train(model):
         torch.save(model.state_dict(), path + opt.model_root_path + '%s_%s_%s.pkl' % (model.model_name,base,str(epoch)))
         eval(model, dataset)
 
+def get_acc(out, label):
+    _, pred = torch.max(out, 1)
+    num_correct = (pred == label).sum()
+    return num_correct.item()
+
 def eval(model, dataset):
     model.eval()
     dataset.setTrain(False)
     test_loader = DataLoader(dataset, batch_size=opt.batch_size, shuffle=False, drop_last=False)
-    eval_acc = 0.0
-    test_num = 0
+    tp, tn, fn, fp = 0, 0, 0, 0
     print('*' * 3 + 'eval' + '*' * 3)
     time.sleep(0.1)
     for data in tqdm(test_loader):
@@ -68,15 +72,22 @@ def eval(model, dataset):
         if opt.use_gpu:
             txt1, txt2, label = txt1.cuda(), txt2.cuda(), label.cuda()
         out = model(txt1, txt2)
-        eval_acc += get_acc(out, label)
-        test_num += label.size(0)
-    print eval_acc/test_num
+        _, pred = torch.max(out, 1)
+        tp += ((pred == 1) & (label == 1)).cpu().sum().item()
+        tn += ((pred == 0) & (label == 0)).cpu().sum().item()
+        fn += ((pred == 0) & (label == 1)).cpu().sum().item()
+        fp += ((pred == 1) & (label == 0)).cpu().sum().item()
+    p,r,a,f1 = get_all_f1(fp, tp, tn, fn)
+    print (p,r,a,f1)
+    return p,r,a,f1
 
+def get_all_f1(fp, tp, tn, fn):
+    p = 1.0*tp/(tp+fp) if (tp+fp)!=0 else 0.0
+    r = 1.0*tp/(tp+fn) if (tp+fn)!=0 else 0.0
+    a = 1.0*(tp+tn)/(tp+fp+tn+fn)
+    f1 = 2.0*p*r/(p+r) if(p+r)!=0 else 0.0
+    return p, r, a, f1
 
-def get_acc(out, label):
-    _, pred = torch.max(out, 1)
-    num_correct = (pred == label).sum()
-    return num_correct.item()
 
 def initNetParams(net):
     '''''Init net parameters.'''
@@ -96,6 +107,8 @@ if __name__ == '__main__':
         torch.cuda.set_device(3)
     model = CNNText()
     print(model.model_name)
+    print 'use_gpu' if opt.use_gpu else 'use_cpu'
+    print ('')
     if opt.use_gpu:
         model.cuda()
     # initNetParams(model)
