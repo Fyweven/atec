@@ -36,6 +36,18 @@ def getCharLen(file_path):
             char_len.append(len(text2))
     return char_len
 
+def getWordLen(seg_path):
+    word_len = []
+    with open(path+seg_path, 'r', encoding=opt.coding) as f:
+        for line in f.readlines():
+            items = line.strip().split('\t')
+            assert len(items) == 4
+            text1 = items[1].strip().split(' ')
+            word_len.append(len(text1))
+            text2 = items[2].strip().split(' ')
+            word_len.append(len(text2))
+    return word_len
+
 def plotHist(len_array, plot_name):
     plt.figure()
     plt.title(plot_name)
@@ -51,13 +63,15 @@ def getDataCoding(file_path):
 
 
 if __name__ == '__main__':
-    getDataCoding(opt.orig_data_path)
+    word_len = getWordLen(opt.seg_data_path)
+    # plotHist(word_len, 'ques_word_len')
+    # getDataCoding(opt.orig_data_path)
     # getChar2Idx(opt.orig_data_path,opt.char_idx_path)
     # char_len = getCharLen(opt.orig_data_path)
-    # count = 0
-    # for l in char_len:
-    #     if l>opt.max_len:
-    #         count+=1
-    # print count
-    # print count*1.0/len(char_len)
+    count = 0
+    for l in word_len:
+        if l>opt.word_len:
+            count+=1
+    print count
+    print count*1.0/len(word_len)
     # plotHist(char_len, 'ques_char_len')

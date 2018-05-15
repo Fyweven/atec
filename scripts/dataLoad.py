@@ -4,9 +4,13 @@ import torch
 from torch.utils import data
 from torch.utils.data import DataLoader
 import utils.charFeature as charFeat
+import utils.wordFeature as wordFeat
 
 def getTrainData():
-    _, datas = charFeat.getCharData(opt.orig_data_path)
+    if opt.baseWord:
+        _, datas = wordFeat.getWordData(opt.seg_data_path)
+    else:
+        _, datas = charFeat.getCharData(opt.orig_data_path)
     return datas
 
 class MyDataset(data.Dataset):

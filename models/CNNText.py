@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import torch
 import torch.nn as nn
-import numpy as np
 from utils.config import opt
 
 class CNNText(nn.Module):
@@ -25,7 +24,7 @@ class CNNText(nn.Module):
                     )
         for kernel_size in opt.kernel_sizes])
 
-        # self.dropout = nn.Dropout(opt.dropout)
+        self.dropout = nn.Dropout(opt.dropout)
         self.fc = nn.Sequential(
             nn.Linear(len(opt.kernel_sizes)*(2*opt.text_dim), opt.linear_hidden_size),
             nn.BatchNorm1d(opt.linear_hidden_size),
@@ -43,7 +42,7 @@ class CNNText(nn.Module):
         text2_out = [text_conv(text1.permute(0, 2, 1)) for text_conv in self.text_convs]
         conv_out = torch.cat((text1_out+text2_out), dim=1)
         reshaped = conv_out.view(conv_out.size(0), -1)
-        # reshaped = self.dropout(reshaped)
+        reshaped = self.dropout(reshaped)
         logits = self.fc(reshaped)
         return logits
 

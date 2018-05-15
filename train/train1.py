@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import torch
 from torch import nn, optim
+import torch.nn.functional as F
 from torch.nn import init
 from torch.utils.data import DataLoader
 from scripts import dataLoad
@@ -17,8 +18,10 @@ def train(model):
     dataset = dataLoad.MyDataset(train=True)
     print ('数据加载完成！')
 
-    criterion = nn.CrossEntropyLoss()
-
+    weight = torch.Tensor([0.2,0.8])
+    if opt.use_gpu:
+        weight = weight.cuda()
+    criterion = nn.CrossEntropyLoss(weight=weight)
     optimizer = optim.Adam(model.parameters(), lr=opt.lr)
 
     for epoch in range(1, opt.max_epoch+1):
@@ -53,9 +56,11 @@ def train(model):
         base = 'word' if opt.baseWord else 'char'
         torch.save(model.state_dict(), path + opt.model_root_path + '%s_%s_%s.pkl' % (model.model_name,base,str(epoch)))
         eval(model, dataset)
+    print ('*' * 6 + 'END' +'*' * 6)
 
 def get_acc(out, label):
-    _, pred = torch.max(out, 1)
+    # pred = torch.round(F.sigmoid(out))
+    pred = torch.argmax(out, 1)
     num_correct = (pred == label).sum()
     return num_correct.item()
 
@@ -72,16 +77,17 @@ def eval(model, dataset):
         if opt.use_gpu:
             txt1, txt2, label = txt1.cuda(), txt2.cuda(), label.cuda()
         out = model(txt1, txt2)
-        _, pred = torch.max(out, 1)
+        pred = torch.argmax(out, 1)
         tp += ((pred == 1) & (label == 1)).cpu().sum().item()
         tn += ((pred == 0) & (label == 0)).cpu().sum().item()
         fn += ((pred == 0) & (label == 1)).cpu().sum().item()
         fp += ((pred == 1) & (label == 0)).cpu().sum().item()
-    p,r,a,f1 = get_all_f1(fp, tp, tn, fn)
+    print (tp, tn, fn, fp)
+    p,r,a,f1 = get_all_f1(tp, tn, fn, fp)
     print (p,r,a,f1)
     return p,r,a,f1
 
-def get_all_f1(fp, tp, tn, fn):
+def get_all_f1(tp, tn, fn, fp):
     p = 1.0*tp/(tp+fp) if (tp+fp)!=0 else 0.0
     r = 1.0*tp/(tp+fn) if (tp+fn)!=0 else 0.0
     a = 1.0*(tp+tn)/(tp+fp+tn+fn)
@@ -104,7 +110,7 @@ def initNetParams(net):
 
 if __name__ == '__main__':
     if opt.use_gpu:
-        torch.cuda.set_device(3)
+        torch.cuda.set_device(2)
     model = CNNText()
     print(model.model_name)
     print 'use_gpu' if opt.use_gpu else 'use_cpu'
