@@ -39,7 +39,7 @@ class CNNText(nn.Module):
         #     text1.detach()
         #     text2.detach()
         text1_out = [text_conv(text1.permute(0, 2, 1)) for text_conv in self.text_convs]
-        text2_out = [text_conv(text1.permute(0, 2, 1)) for text_conv in self.text_convs]
+        text2_out = [text_conv(text2.permute(0, 2, 1)) for text_conv in self.text_convs]
         conv_out = torch.cat((text1_out+text2_out), dim=1)
         reshaped = conv_out.view(conv_out.size(0), -1)
         reshaped = self.dropout(reshaped)

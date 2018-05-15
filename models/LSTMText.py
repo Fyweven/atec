@@ -32,17 +32,20 @@ class LSTMText(nn.Module):
                             bidirectional = True)
         self.dropout = nn.Dropout(opt.dropout)
         self.fc = nn.Sequential(
-            nn.Linear(opt.kmax_pooling * (opt.hidden_size * 2), opt.linear_hidden_size),
+            nn.Linear(opt.kmax_pooling * (opt.hidden_size * 2 * 2), opt.linear_hidden_size),
             nn.BatchNorm1d(opt.linear_hidden_size),
             nn.ReLU(inplace=True),
             nn.Linear(opt.linear_hidden_size, opt.num_classes)
         )
 
-    def forward(self, text):
-        text = self.encoder(text)
-        text_out = self.text_lstm(text.permute(1,0,2))[0].permute(1,2,0)
-        text_out = kmax_pooling((text_out), 2, opt.kmax_pooling)
-        reshaped = text_out.view(text_out.size(0), -1)
+    def forward(self, text1, text2):
+        text1, text2 = self.encoder(text1), self.encoder(text2)
+        text1_out = self.text_lstm(text1.permute(1,0,2))[0].permute(1,2,0)
+        text1_out = kmax_pooling((text1_out), 2, opt.kmax_pooling)
+        text2_out = self.text_lstm(text2.permute(1, 0, 2))[0].permute(1, 2, 0)
+        text2_out = kmax_pooling((text2_out), 2, opt.kmax_pooling)
+        lstm_out = torch.cat((text1_out,text2_out), dim=1)
+        reshaped = lstm_out.view(lstm_out.size(0), -1)
         reshaped = self.dropout(reshaped)
         logits = self.fc(reshaped)
         return logits
@@ -53,4 +56,4 @@ if __name__ == '__main__':
     m = LSTMText()
     print(m)
     text = torch.autograd.Variable(torch.arange(0, 10*opt.max_len).view(10, opt.max_len)).long()
-    print(m(text))
+    print(m(text, text))

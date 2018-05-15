@@ -10,6 +10,7 @@ import time
 from tqdm import tqdm
 from torch.autograd import Variable
 from models.CNNText import CNNText
+from models.LSTMText import LSTMText
 import os
 path=os.path.abspath('..')
 
@@ -18,7 +19,7 @@ def train(model):
     dataset = dataLoad.MyDataset(train=True)
     print ('数据加载完成！')
 
-    weight = torch.Tensor([0.2,0.8])
+    weight = torch.Tensor([0.3,0.7])
     if opt.use_gpu:
         weight = weight.cuda()
     criterion = nn.CrossEntropyLoss(weight=weight)
@@ -111,12 +112,12 @@ def initNetParams(net):
 if __name__ == '__main__':
     if opt.use_gpu:
         torch.cuda.set_device(2)
-    model = CNNText()
+    model = LSTMText()
     print(model.model_name)
     print 'use_gpu' if opt.use_gpu else 'use_cpu'
     print ('')
     if opt.use_gpu:
         model.cuda()
-    # initNetParams(model)
+    initNetParams(model)
     # print(model)
     train(model)
